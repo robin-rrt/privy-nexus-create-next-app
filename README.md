@@ -1,3 +1,66 @@
+# Privy Auth + Avail Nexus SDK `create-next-app` Integration 
+
+This project demonstrates a complete integration of [**Privy Auth**](https://www.privy.io/) with the [**Avail Nexus SDK**](https://github.com/availproject/nexus) in a [NextJS](https://nextjs.org/) application. It provides a full-stack solution for cross-chain token transfers and bridging using Privy's wallet infrastructure.
+
+## 🚀 Nexus SDK Integration
+
+### Prerequisites
+- **Node.js**: >= 18.0.0
+- **npm**: >= 9.0.0
+- **EVM Wallet**: MetaMask, WalletConnect, or any EVM-compatible wallet
+- **Privy Account**: Set up at [Privy Dashboard](https://console.privy.io/)
+
+### SDK Versions
+- **Avail Nexus SDK**: `avail-nexus-sdk@^0.0.4-dev.6`
+- **Privy Auth**: `@privy-io/react-auth@^2.16.0`
+- **Next.js**: Latest
+- **React**: 18.2.0
+
+### File Structure
+
+```
+├── components/nexus/           # Nexus UI Components
+│   ├── NexusDashboard.tsx     # Main dashboard container
+│   ├── NexusStatus.tsx        # SDK status and initialization
+│   ├── BalanceDisplay.tsx     # Unified balance display
+│   ├── TransferSection.tsx    # Cross-chain transfer UI
+│   └── BridgeSection.tsx      # Token bridging interface
+├── hooks/
+│   └── useNexusSDK.ts         # Custom hook for SDK operations
+├── lib/
+│   ├── nexus-sdk.ts           # SDK service layer
+│   ├── nexus-constants.ts     # Supported tokens and chains
+│   └── utils.ts               # Utility functions
+└── pages/
+    └── dashboard.tsx          # Main dashboard page
+```
+
+### What It Does
+
+The Nexus integration provides:
+
+1. **Cross-Chain Token Transfers**: Transfer tokens between different supported EVM chains
+2. **Token Bridging**: Bridge tokens to and from supported chains.
+3. **Unified Balance Display**: View aggregated balances across multiple chains
+4. **Privy Integration**: Seamless integration with Privy's multi-wallet system
+
+### Supported Networks
+
+- **Ethereum Mainnet**
+- **Polygon**
+- **Arbitrum One**
+- **Optimism**
+- **Base**
+
+### Supported Tokens
+
+- **USDC** 
+- **USDT** 
+- **ETH**
+
+
+---
+
 # Privy Auth `create-next-app` Starter
 
 This is a template for integrating [**Privy Auth**](https://www.privy.io/) into a [NextJS](https://nextjs.org/) project. Check out the deployed app [here](https://create-next-app.privy.io/)!
