@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useWallets } from "@privy-io/react-auth";
 import { nexusSDKService, NexusSDKInstance } from "../lib/nexus-sdk";
 import { SUPPORTED_TOKENS, SUPPORTED_CHAINS } from "../lib/nexus-constants";
+import type { NexusNetwork } from "avail-nexus-sdk";
 
 export interface UseNexusSDKReturn {
   // SDK Status
@@ -12,7 +13,7 @@ export interface UseNexusSDKReturn {
   isLoadingBalances: boolean;
   
   // Actions
-  initializeNexus: (selectedWalletIndex: number) => Promise<void>;
+  initializeNexus: (selectedWalletIndex: number, network: NexusNetwork) => Promise<void>;
   fetchBalances: () => Promise<void>;
   killNexus: () => Promise<void>;
   
@@ -42,6 +43,42 @@ export interface UseNexusSDKReturn {
     chainId: number;
   }) => Promise<any>;
   
+  // Bridge and Execute operations
+  simulateBridgeAndExecute: (params: {
+    toChainId: number;
+    token: string;
+    amount: number | string;
+    recipient?: string;
+    execute?: {
+      contractAddress: string;
+      contractAbi: any;
+      functionName: string;
+      functionParams: readonly unknown[];
+      value?: string;
+      tokenApproval: {
+        token: string;
+        amount: string;
+      };
+    };
+  }) => Promise<any>;
+  bridgeAndExecute: (params: {
+    toChainId: number;
+    token: string;
+    amount: number | string;
+    recipient?: string;
+    execute?: {
+      contractAddress: string;
+      contractAbi: any;
+      functionName: string;
+      functionParams: readonly unknown[];
+      value?: string;
+      tokenApproval: {
+        token: string;
+        amount: string;
+      };
+    };
+  }) => Promise<any>;
+  
   // Constants
   supportedTokens: string[];
   supportedChains: any[];
@@ -52,24 +89,30 @@ export function useNexusSDK(): UseNexusSDKReturn {
     sdk: null,
     isInitialized: false,
     isInitializing: false,
-    error: null
+    error: null,
+    network: 'mainnet'
   });
   const [balances, setBalances] = useState<any[]>([]);
   const [isLoadingBalances, setIsLoadingBalances] = useState(false);
   
   const { wallets } = useWallets();
 
-  // Load SDK on mount
+  // Load SDK on mount with dynamic import
   useEffect(() => {
     const loadSDK = async () => {
-      const sdk = await nexusSDKService.loadSDK();
-      setSdkStatus(nexusSDKService.getStatus());
+      try {
+        const sdk = await nexusSDKService.loadSDK('mainnet');
+        setSdkStatus(nexusSDKService.getStatus());
+      } catch (error) {
+        console.error("Failed to load SDK on mount:", error);
+        setSdkStatus(prev => ({ ...prev, error: error instanceof Error ? error.message : "Failed to load SDK" }));
+      }
     };
     loadSDK();
   }, []);
 
   // Initialize Nexus SDK with Privy provider
-  const initializeNexus = useCallback(async (selectedWalletIndex: number) => {
+  const initializeNexus = useCallback(async (selectedWalletIndex: number, network: NexusNetwork) => {
     try {
       const selectedWallet = wallets[selectedWalletIndex];
       
@@ -100,6 +143,8 @@ export function useNexusSDK(): UseNexusSDKReturn {
         throw new Error("No Ethereum provider found. Please ensure you have connected an EVM wallet.");
       }
 
+      // Load SDK with selected network
+      await nexusSDKService.loadSDK(network);
       const success = await nexusSDKService.initialize(provider);
       setSdkStatus(nexusSDKService.getStatus());
       
@@ -148,12 +193,13 @@ export function useNexusSDK(): UseNexusSDKReturn {
       setIsLoadingBalances(false);
       
       // Reload the SDK so the Initialize button can be shown again
-      const sdk = await nexusSDKService.loadSDK();
+      const sdk = await nexusSDKService.loadSDK('mainnet');
       setSdkStatus({
         sdk: sdk,
         isInitialized: false,
         isInitializing: false,
-        error: null
+        error: null,
+        network: 'mainnet'
       });
     } catch (error) {
       console.error("Failed to kill Nexus:", error);
@@ -214,6 +260,71 @@ export function useNexusSDK(): UseNexusSDKReturn {
     });
   }, []);
 
+  // Bridge and Execute operations
+  const simulateBridgeAndExecute = useCallback(async (params: {
+    toChainId: number;
+    token: string;
+    amount: number | string;
+    recipient?: string;
+    execute?: {
+      contractAddress: string;
+      contractAbi: any;
+      functionName: string;
+      functionParams: readonly unknown[];
+      value?: string;
+      tokenApproval: {
+        token: string;
+        amount: string;
+      };
+    };
+  }) => {
+    return await nexusSDKService.simulateBridgeAndExecute({
+      toChainId: params.toChainId as any,
+      token: params.token as any,
+      amount: params.amount,
+      recipient: params.recipient as `0x${string}`,
+      execute: params.execute ? {
+        ...params.execute,
+        tokenApproval: {
+          ...params.execute.tokenApproval,
+          token: params.execute.tokenApproval.token as any
+        }
+      } : undefined
+    });
+  }, []);
+
+  const bridgeAndExecute = useCallback(async (params: {
+    toChainId: number;
+    token: string;
+    amount: number | string;
+    recipient?: string;
+    execute?: {
+      contractAddress: string;
+      contractAbi: any;
+      functionName: string;
+      functionParams: readonly unknown[];
+      value?: string;
+      tokenApproval: {
+        token: string;
+        amount: string;
+      };
+    };
+  }) => {
+    return await nexusSDKService.bridgeAndExecute({
+      toChainId: params.toChainId as any,
+      token: params.token as any,
+      amount: params.amount,
+      recipient: params.recipient as `0x${string}`,
+      execute: params.execute ? {
+        ...params.execute,
+        tokenApproval: {
+          ...params.execute.tokenApproval,
+          token: params.execute.tokenApproval.token as any
+        }
+      } : undefined
+    });
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -232,6 +343,8 @@ export function useNexusSDK(): UseNexusSDKReturn {
     transfer,
     simulateBridge,
     bridge,
+    simulateBridgeAndExecute,
+    bridgeAndExecute,
     supportedTokens: [...SUPPORTED_TOKENS],
     supportedChains: SUPPORTED_CHAINS
   };

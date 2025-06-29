@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useWallets } from "@privy-io/react-auth";
 import { useNexusSDK } from "../../hooks/useNexusSDK";
 import { NexusStatus } from "./NexusStatus";
+import type { NexusNetwork } from "avail-nexus-sdk";
 
 interface NexusDashboardProps {
   user: any;
@@ -11,14 +12,19 @@ export function NexusDashboard({ user }: NexusDashboardProps) {
   const [selectedWalletIndex, setSelectedWalletIndex] = useState(0);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [bridgeError, setBridgeError] = useState<string | null>(null);
+  const [bridgeExecuteError, setBridgeExecuteError] = useState<string | null>(null);
   const [simulationResult, setSimulationResult] = useState<any>(null);
   const [transferResult, setTransferResult] = useState<any>(null);
   const [bridgeSimulationResult, setBridgeSimulationResult] = useState<any>(null);
   const [bridgeResult, setBridgeResult] = useState<any>(null);
+  const [bridgeExecuteSimulationResult, setBridgeExecuteSimulationResult] = useState<any>(null);
+  const [bridgeExecuteResult, setBridgeExecuteResult] = useState<any>(null);
   const [isSimulatingTransfer, setIsSimulatingTransfer] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [isSimulatingBridge, setIsSimulatingBridge] = useState(false);
   const [isBridging, setIsBridging] = useState(false);
+  const [isSimulatingBridgeExecute, setIsSimulatingBridgeExecute] = useState(false);
+  const [isExecutingBridgeExecute, setIsExecutingBridgeExecute] = useState(false);
 
   const { wallets } = useWallets();
   const selectedWallet = wallets[selectedWalletIndex];
@@ -34,13 +40,15 @@ export function NexusDashboard({ user }: NexusDashboardProps) {
     transfer,
     simulateBridge,
     bridge,
+    simulateBridgeAndExecute,
+    bridgeAndExecute,
     supportedTokens,
     supportedChains
   } = useNexusSDK();
 
-  const handleInitialize = async () => {
+  const handleInitialize = async (network: NexusNetwork) => {
     try {
-      await initializeNexus(selectedWalletIndex);
+      await initializeNexus(selectedWalletIndex, network);
     } catch (error) {
       console.error("Failed to initialize Nexus:", error);
       // The error is already handled in the SDK service and hook
@@ -122,20 +130,85 @@ export function NexusDashboard({ user }: NexusDashboardProps) {
     }
   };
 
+  const handleSimulateBridgeExecute = async (params: {
+    toChainId: number;
+    token: string;
+    amount: number | string;
+    recipient?: string;
+    execute?: {
+      contractAddress: string;
+      contractAbi: any;
+      functionName: string;
+      functionParams: readonly unknown[];
+      value?: string;
+      tokenApproval: {
+        token: string;
+        amount: string;
+      };
+    };
+  }) => {
+    setIsSimulatingBridgeExecute(true);
+    setBridgeExecuteSimulationResult(null);
+    setBridgeExecuteError(null);
+    try {
+      const result = await simulateBridgeAndExecute(params);
+      setBridgeExecuteSimulationResult(result);
+    } catch (err: any) {
+      setBridgeExecuteError(err.message || "Simulation failed");
+    } finally {
+      setIsSimulatingBridgeExecute(false);
+    }
+  };
+
+  const handleBridgeExecute = async (params: {
+    toChainId: number;
+    token: string;
+    amount: number | string;
+    recipient?: string;
+    execute?: {
+      contractAddress: string;
+      contractAbi: any;
+      functionName: string;
+      functionParams: readonly unknown[];
+      value?: string;
+      tokenApproval: {
+        token: string;
+        amount: string;
+      };
+    };
+  }) => {
+    setIsExecutingBridgeExecute(true);
+    setBridgeExecuteResult(null);
+    setBridgeExecuteError(null);
+    try {
+      const result = await bridgeAndExecute(params);
+      setBridgeExecuteResult(result);
+    } catch (err: any) {
+      setBridgeExecuteError(err.message || "Bridge & Execute failed");
+    } finally {
+      setIsExecutingBridgeExecute(false);
+    }
+  };
+
   const handleKillNexus = async () => {
     try {
       await killNexus();
       // Reset all local state
       setTransferError(null);
       setBridgeError(null);
+      setBridgeExecuteError(null);
       setSimulationResult(null);
       setTransferResult(null);
       setBridgeSimulationResult(null);
       setBridgeResult(null);
+      setBridgeExecuteSimulationResult(null);
+      setBridgeExecuteResult(null);
       setIsSimulatingTransfer(false);
       setIsTransferring(false);
       setIsSimulatingBridge(false);
       setIsBridging(false);
+      setIsSimulatingBridgeExecute(false);
+      setIsExecutingBridgeExecute(false);
     } catch (error) {
       console.error("Failed to kill Nexus:", error);
     }
@@ -175,6 +248,16 @@ export function NexusDashboard({ user }: NexusDashboardProps) {
       bridgeError={bridgeError}
       onClearBridgeSimulation={() => setBridgeSimulationResult(null)}
       onClearBridge={() => setBridgeResult(null)}
+      // Bridge & Execute props
+      onSimulateBridgeExecute={handleSimulateBridgeExecute}
+      onBridgeExecute={handleBridgeExecute}
+      isSimulatingBridgeExecute={isSimulatingBridgeExecute}
+      isExecutingBridgeExecute={isExecutingBridgeExecute}
+      bridgeExecuteSimulationResult={bridgeExecuteSimulationResult}
+      bridgeExecuteResult={bridgeExecuteResult}
+      bridgeExecuteError={bridgeExecuteError}
+      onClearBridgeExecuteSimulation={() => setBridgeExecuteSimulationResult(null)}
+      onClearBridgeExecute={() => setBridgeExecuteResult(null)}
     />
   );
 } 

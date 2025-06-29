@@ -1,10 +1,11 @@
-import { NexusSDK, SUPPORTED_TOKENS, SUPPORTED_CHAINS_IDS } from "avail-nexus-sdk";
+import type { SUPPORTED_TOKENS, SUPPORTED_CHAINS_IDS, NexusNetwork } from "avail-nexus-sdk";
 
 export interface NexusSDKInstance {
-  sdk: NexusSDK | null;
+  sdk: any | null;
   isInitialized: boolean;
   isInitializing: boolean;
   error: string | null;
+  network: NexusNetwork;
 }
 
 export interface TransferParams {
@@ -20,21 +21,48 @@ export interface BridgeParams {
   chainId: SUPPORTED_CHAINS_IDS;
 }
 
+export interface BridgeAndExecuteParams {
+  toChainId: SUPPORTED_CHAINS_IDS;
+  token: SUPPORTED_TOKENS;
+  amount: number | string;
+  recipient?: `0x${string}`;
+  execute?: {
+    contractAddress: string;
+    contractAbi: any;
+    functionName: string;
+    functionParams: readonly unknown[];
+    value?: string;
+    tokenApproval: {
+      token: SUPPORTED_TOKENS;
+      amount: string;
+    };
+  };
+}
+
 export class NexusSDKService {
-  private sdk: NexusSDK | null = null;
+  private sdk: any | null = null;
   private isInitialized = false;
   private isInitializing = false;
   private error: string | null = null;
+  private network: NexusNetwork = 'mainnet';
 
-  // Load SDK dynamically
-  async loadSDK(): Promise<NexusSDK | null> {
+  // Load SDK with network selection using dynamic import
+  async loadSDK(network: NexusNetwork = 'mainnet'): Promise<any | null> {
     try {
+      console.log(`Loading Nexus SDK for ${network}...`);
+      
+      // Dynamic import of NexusSDK
       const { NexusSDK } = await import("avail-nexus-sdk");
-      this.sdk = new NexusSDK();
+      
+      // Create SDK instance with network configuration
+      this.sdk = new NexusSDK({ network });
+      this.network = network;
+      
+      console.log(`Nexus SDK loaded for ${network}`);
       return this.sdk;
     } catch (error) {
       console.error("Failed to load Nexus SDK:", error);
-      this.error = "Failed to load Nexus SDK";
+      this.error = error instanceof Error ? error.message : "Failed to load SDK";
       return null;
     }
   }
@@ -140,7 +168,7 @@ export class NexusSDKService {
   }
 
   // Get SDK instance
-  getSDK(): NexusSDK | null {
+  getSDK(): any | null {
     return this.sdk;
   }
 
@@ -150,7 +178,8 @@ export class NexusSDKService {
       sdk: this.sdk,
       isInitialized: this.isInitialized,
       isInitializing: this.isInitializing,
-      error: this.error
+      error: this.error,
+      network: this.network
     };
   }
 
@@ -205,6 +234,24 @@ export class NexusSDKService {
     }
 
     return await this.sdk.bridge(params);
+  }
+
+  // Simulate bridge and execute
+  async simulateBridgeAndExecute(params: BridgeAndExecuteParams): Promise<any> {
+    if (!this.isInitialized || !this.sdk) {
+      throw new Error("Nexus SDK not loaded");
+    }
+
+    return await this.sdk.simulateBridgeAndExecute(params);
+  }
+
+  // Execute bridge and execute
+  async bridgeAndExecute(params: BridgeAndExecuteParams): Promise<any> {
+    if (!this.isInitialized || !this.sdk) {
+      throw new Error("Nexus SDK not loaded");
+    }
+
+    return await this.sdk.bridgeAndExecute(params);
   }
 
   // Cleanup

@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useWallets } from "@privy-io/react-auth";
 import { NexusSDKInstance } from "../../lib/nexus-sdk";
 import { BalanceDisplay } from "./BalanceDisplay";
 import { TransferSection } from "./TransferSection";
 import { BridgeSection } from "./BridgeSection";
+import { BridgeExecuteSection } from "./BridgeExecuteSection";
+import type { NexusNetwork } from "avail-nexus-sdk";
 
 interface NexusStatusProps {
   sdkStatus: NexusSDKInstance;
   selectedWalletIndex: number;
   onWalletChange: (index: number) => void;
-  onInitialize: () => void;
+  onInitialize: (network: NexusNetwork) => void;
   onKillNexus: () => void;
   user: any;
   // Balance props
@@ -38,6 +40,48 @@ interface NexusStatusProps {
   bridgeError: string | null;
   onClearBridgeSimulation: () => void;
   onClearBridge: () => void;
+  // Bridge & Execute props
+  onSimulateBridgeExecute: (params: {
+    toChainId: number;
+    token: string;
+    amount: number | string;
+    recipient?: string;
+    execute?: {
+      contractAddress: string;
+      contractAbi: any;
+      functionName: string;
+      functionParams: readonly unknown[];
+      value?: string;
+      tokenApproval: {
+        token: string;
+        amount: string;
+      };
+    };
+  }) => Promise<any>;
+  onBridgeExecute: (params: {
+    toChainId: number;
+    token: string;
+    amount: number | string;
+    recipient?: string;
+    execute?: {
+      contractAddress: string;
+      contractAbi: any;
+      functionName: string;
+      functionParams: readonly unknown[];
+      value?: string;
+      tokenApproval: {
+        token: string;
+        amount: string;
+      };
+    };
+  }) => Promise<any>;
+  isSimulatingBridgeExecute: boolean;
+  isExecutingBridgeExecute: boolean;
+  bridgeExecuteSimulationResult: any;
+  bridgeExecuteResult: any;
+  bridgeExecuteError: string | null;
+  onClearBridgeExecuteSimulation: () => void;
+  onClearBridgeExecute: () => void;
 }
 
 export function NexusStatus({
@@ -72,14 +116,51 @@ export function NexusStatus({
   bridgeResult,
   bridgeError,
   onClearBridgeSimulation,
-  onClearBridge
+  onClearBridge,
+  // Bridge & Execute props
+  onSimulateBridgeExecute,
+  onBridgeExecute,
+  isSimulatingBridgeExecute,
+  isExecutingBridgeExecute,
+  bridgeExecuteSimulationResult,
+  bridgeExecuteResult,
+  bridgeExecuteError,
+  onClearBridgeExecuteSimulation,
+  onClearBridgeExecute
 }: NexusStatusProps) {
   const { wallets } = useWallets();
   const selectedWallet = wallets[selectedWalletIndex];
+  const [selectedNetwork, setSelectedNetwork] = useState<NexusNetwork>('mainnet');
+
+  const handleInitialize = () => {
+    onInitialize(selectedNetwork);
+  };
+
+  const isTestnet = sdkStatus.network === 'testnet';
 
   return (
     <div className="mt-8 p-4 bg-white rounded-lg shadow-sm border">
       <h2 className="text-lg font-semibold mb-4">Nexus SDK Status</h2>
+      
+      {/* Network Selector */}
+      <div className="mb-4">
+        <label htmlFor="network-select" className="block text-sm font-medium text-gray-700 mb-2">
+          Select Network
+        </label>
+        <select
+          id="network-select"
+          value={selectedNetwork}
+          onChange={(e) => setSelectedNetwork(e.target.value as NexusNetwork)}
+          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+          disabled={sdkStatus.isInitialized}
+        >
+          <option value="mainnet">Mainnet</option>
+          <option value="testnet">Testnet</option>
+        </select>
+        <p className="mt-1 text-xs text-gray-500">
+          Current: {sdkStatus.network} {isTestnet && "(Bridge & Execute disabled)"}
+        </p>
+      </div>
       
       {/* Wallet Selector */}
       {wallets && wallets.length > 0 && (
@@ -134,7 +215,7 @@ export function NexusStatus({
       
       {!sdkStatus.isInitialized && user?.wallet && sdkStatus.sdk && selectedWallet && (
         <button
-          onClick={onInitialize}
+          onClick={handleInitialize}
           disabled={sdkStatus.isInitializing}
           className={`text-sm py-2 px-4 rounded-md text-white ${
             sdkStatus.isInitializing
@@ -142,7 +223,7 @@ export function NexusStatus({
               : 'bg-blue-600 hover:bg-blue-700'
           }`}
         >
-          {sdkStatus.isInitializing ? 'Initializing Nexus...' : 'Initialize Nexus SDK'}
+          {sdkStatus.isInitializing ? 'Initializing Nexus...' : `Initialize Nexus SDK (${selectedNetwork})`}
         </button>
       )}
 
@@ -160,7 +241,7 @@ export function NexusStatus({
           {sdkStatus.error.includes("rejected") || sdkStatus.error.includes("cancelled") || sdkStatus.error.includes("failed") ? (
             <div className="flex items-center gap-2">
               <button
-                onClick={onInitialize}
+                onClick={handleInitialize}
                 disabled={sdkStatus.isInitializing}
                 className={`text-xs py-1 px-3 rounded text-white ${
                   sdkStatus.isInitializing
@@ -180,7 +261,16 @@ export function NexusStatus({
 
       {sdkStatus.isInitialized && (
         <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700">
-          ✅ Nexus SDK is ready for cross-chain operations
+          ✅ Nexus SDK is ready for cross-chain operations ({sdkStatus.network})
+        </div>
+      )}
+
+      {/* Testnet Warning */}
+      {isTestnet && sdkStatus.isInitialized && (
+        <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+          <div className="text-yellow-700">
+            <strong>⚠️ Testnet Mode:</strong> Bridge & Execute section is disabled in testnet mode. Only Bridge and Transfer operations are available.
+          </div>
         </div>
       )}
 
@@ -225,6 +315,24 @@ export function NexusStatus({
           error={bridgeError}
           onClearSimulation={onClearBridgeSimulation}
           onClearBridge={onClearBridge}
+        />
+      )}
+
+      {/* Bridge Execute Section - Only show in mainnet */}
+      {sdkStatus.isInitialized && !isTestnet && (
+        <BridgeExecuteSection
+          supportedTokens={supportedTokens}
+          supportedChains={supportedChains}
+          selectedWalletAddress={selectedWallet?.address || ""}
+          onSimulate={onSimulateBridgeExecute}
+          onExecute={onBridgeExecute}
+          isSimulating={isSimulatingBridgeExecute}
+          isExecuting={isExecutingBridgeExecute}
+          simulationResult={bridgeExecuteSimulationResult}
+          executeResult={bridgeExecuteResult}
+          error={bridgeExecuteError}
+          onClearSimulation={onClearBridgeExecuteSimulation}
+          onClearExecute={onClearBridgeExecute}
         />
       )}
 

@@ -43,6 +43,33 @@ The Nexus integration provides:
 2. **Token Bridging**: Bridge tokens to and from supported chains.
 3. **Unified Balance Display**: View aggregated balances across multiple chains
 4. **Privy Integration**: Seamless integration with Privy's multi-wallet system
+5. **Network Selection**: Choose between Mainnet and Testnet modes
+6. **Bridge & Execute**: Advanced operations for bridging and executing smart contract calls (Mainnet only)
+
+### Key Features
+
+- **Modular Architecture**: Clean separation of concerns with dedicated components
+- **Error Handling**: Robust error handling with user-friendly messages
+- **State Management**: Centralized state management using custom hooks
+- **TypeScript Support**: Full TypeScript coverage for type safety
+- **Responsive UI**: Mobile-first design with Tailwind CSS
+- **Auto-balance Fetching**: Automatic balance updates after operations
+- **SDK Lifecycle Management**: Proper initialization and cleanup
+- **Network Mode Support**: Toggle between Mainnet and Testnet environments
+- **Conditional Features**: Bridge & Execute only available in Mainnet mode
+
+### Network Modes
+
+#### Mainnet Mode
+- **Full Feature Set**: All operations available (Transfer, Bridge, Bridge & Execute)
+- **Real Assets**: Uses real tokens and funds
+- **Production Ready**: Suitable for production applications
+
+#### Testnet Mode
+- **Limited Features**: Only Transfer and Bridge operations available
+- **Test Assets**: Uses testnet tokens and funds
+- **Development Safe**: Safe for testing and development
+- **Bridge & Execute Disabled**: Advanced operations not available in testnet
 
 ### Supported Networks
 
