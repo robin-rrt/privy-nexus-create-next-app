@@ -5,7 +5,7 @@ import { BalanceDisplay } from "./BalanceDisplay";
 import { TransferSection } from "./TransferSection";
 import { BridgeSection } from "./BridgeSection";
 import { BridgeExecuteSection } from "./BridgeExecuteSection";
-import type { NexusNetwork } from "avail-nexus-sdk";
+import type { NexusNetwork } from "@avail-project/nexus";
 
 interface NexusStatusProps {
   sdkStatus: NexusSDKInstance;

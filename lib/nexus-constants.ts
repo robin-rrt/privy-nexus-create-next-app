@@ -1,4 +1,4 @@
-import type { ChainMetadata } from "avail-nexus-sdk";
+import type { ChainMetadata } from "@avail-project/nexus";
 
 export const SUPPORTED_TOKENS = ["ETH", "USDC", "USDT"] as const;
 export type SupportedToken = typeof SUPPORTED_TOKENS[number];

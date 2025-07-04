@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useWallets } from "@privy-io/react-auth";
 import { useNexusSDK } from "../../hooks/useNexusSDK";
 import { NexusStatus } from "./NexusStatus";
-import type { NexusNetwork } from "avail-nexus-sdk";
+import type { NexusNetwork } from "@avail-project/nexus";
 
 interface NexusDashboardProps {
   user: any;

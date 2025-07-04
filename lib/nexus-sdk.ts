@@ -1,4 +1,4 @@
-import type { SUPPORTED_TOKENS, SUPPORTED_CHAINS_IDS, NexusNetwork } from "avail-nexus-sdk";
+import type { SUPPORTED_TOKENS, SUPPORTED_CHAINS_IDS, NexusNetwork } from "@avail-project/nexus";
 
 export interface NexusSDKInstance {
   sdk: any | null;
@@ -52,7 +52,7 @@ export class NexusSDKService {
       console.log(`Loading Nexus SDK for ${network}...`);
       
       // Dynamic import of NexusSDK
-      const { NexusSDK } = await import("avail-nexus-sdk");
+      const { NexusSDK } = await import("@avail-project/nexus");
       
       // Create SDK instance with network configuration
       this.sdk = new NexusSDK({ network });

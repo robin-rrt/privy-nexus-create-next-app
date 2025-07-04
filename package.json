@@ -12,12 +12,12 @@
     "lint": "next lint && npx prettier --check \"{__tests__,components,pages,styles}/**/*.{ts,tsx,js,jsx}\" && npx tsc --noEmit"
   },
   "dependencies": {
+    "@avail-project/nexus": "^0.1.0",
     "@headlessui/react": "^1.7.3",
     "@heroicons/react": "^2.0.12",
     "@privy-io/react-auth": "^2.16.0",
     "@privy-io/server-auth": "1.21.2",
     "@tailwindcss/forms": "^0.5.3",
-    "avail-nexus-sdk": "^0.0.4-dev.6",
     "axios": "^1.9.0",
     "next": "latest",
     "react": "18.2.0",

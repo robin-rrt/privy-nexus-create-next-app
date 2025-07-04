@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useWallets } from "@privy-io/react-auth";
 import { nexusSDKService, NexusSDKInstance } from "../lib/nexus-sdk";
 import { SUPPORTED_TOKENS, SUPPORTED_CHAINS } from "../lib/nexus-constants";
-import type { NexusNetwork } from "avail-nexus-sdk";
+import type { NexusNetwork } from "@avail-project/nexus";
 
 export interface UseNexusSDKReturn {
   // SDK Status

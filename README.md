@@ -11,7 +11,7 @@ This project demonstrates a complete integration of [**Privy Auth**](https://www
 - **Privy Account**: Set up at [Privy Dashboard](https://console.privy.io/)
 
 ### SDK Versions
-- **Avail Nexus SDK**: `avail-nexus-sdk@^0.0.4-dev.6`
+- **Avail Nexus SDK**: `@avail-project/nexus@^0.1.0`
 - **Privy Auth**: `@privy-io/react-auth@^2.16.0`
 - **Next.js**: Latest
 - **React**: 18.2.0
